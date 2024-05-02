@@ -24,6 +24,8 @@ import argparse
 import logging
 import sys
 import boto3
+import pandas as pd
+from io import StringIO
 
 from poc_minio_s3_select_python import __version__
 
@@ -62,10 +64,20 @@ def get_expressions_by_annotations(s3, annotation_id):
         OutputSerialization={'CSV': {}},
     )
 
+    expressions = None
     for event in r['Payload']:
         if 'Records' in event:
-            records = event['Records']['Payload'].decode('utf-8')
-            print(records)
+            records = event['Records']['Payload'].decode('utf-8')  
+
+            df =  pd.read_csv(StringIO(records), header=None)
+            
+            if expressions is None:
+                expressions = df
+            else:            
+                expressions = pd.concat([expressions, df])
+
+        elif 'End' in event:
+            print("End Event")
         elif 'Stats' in event:
             statsDetails = event['Stats']['Details']
             print("Stats details bytesScanned: ")
@@ -73,7 +85,9 @@ def get_expressions_by_annotations(s3, annotation_id):
             print("Stats details bytesProcessed: ")
             print(statsDetails['BytesProcessed'])
 
-    return null
+    print(expressions)
+
+    return None
 
 
 # ---- CLI ----
