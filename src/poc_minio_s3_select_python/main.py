@@ -23,6 +23,7 @@ References:
 import argparse
 import logging
 import sys
+import time
 import boto3
 import pandas as pd
 from io import StringIO
@@ -64,6 +65,8 @@ def get_expressions_by_annotations(s3, annotation_id):
         OutputSerialization={'CSV': {}},
     )
 
+    start = time.time()
+
     expressions = None
     for event in r['Payload']:
         if 'Records' in event:
@@ -85,7 +88,10 @@ def get_expressions_by_annotations(s3, annotation_id):
             print("Stats details bytesProcessed: ")
             print(statsDetails['BytesProcessed'])
 
-    print(expressions)
+    end = time.time()
+    print(end - start)
+
+    print(expressions.head())
 
     return None
 
